@@ -34,7 +34,11 @@ def get_issues():
 
 
 def get_automation_sessions():
-    return [s for s in list_sessions(limit=200) if AUTOMATION_TAGS & set(s.get("tags", []))]
+    return [
+        s
+        for s in list_sessions(limit=200)
+        if AUTOMATION_TAGS & set(s.get("tags", [])) and not s.get("is_archived")
+    ]
 
 
 def issue_number_from_tags(tags):
