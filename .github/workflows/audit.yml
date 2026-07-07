@@ -1,0 +1,21 @@
+name: devin-audit
+
+on:
+  schedule:
+    - cron: "0 8 * * *"   # daily 08:00 UTC
+  workflow_dispatch: {}
+
+jobs:
+  audit:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Start Devin audit session
+        env:
+          DEVIN_SERVICE_API_KEY: ${{ secrets.DEVIN_SERVICE_API_KEY }}
+          DEVIN_ORG_ID: ${{ secrets.DEVIN_ORG_ID }}
+          PYTHONPATH: scripts
+        run: python scripts/scan_dispatch.py

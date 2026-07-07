@@ -1,0 +1,34 @@
+x-env: &devin-env
+  DEVIN_SERVICE_API_KEY: ${DEVIN_SERVICE_API_KEY}
+  DEVIN_ORG_ID: ${DEVIN_ORG_ID}
+  DEVIN_API_BASE: ${DEVIN_API_BASE:-https://api.devin.ai}
+  TARGET_REPO: ${TARGET_REPO:-DavidBanda314/superset}
+  ISSUE_LABEL: ${ISSUE_LABEL:-devin-fix}
+  GITHUB_TOKEN: ${GITHUB_TOKEN:-}
+
+services:
+  # Trigger A: Devin audit session that detects issues and files them on GitHub
+  audit:
+    build: .
+    command: ["scripts/scan_dispatch.py"]
+    environment: *devin-env
+
+  # Trigger B (manual simulation): dispatch a fix session for one issue
+  # Usage: ISSUE_NUMBER=123 docker compose run -e ISSUE_NUMBER dispatch
+  dispatch:
+    build: .
+    command: ["scripts/dispatch.py"]
+    environment:
+      <<: *devin-env
+      ISSUE_NUMBER: ${ISSUE_NUMBER:-}
+      ISSUE_TITLE: ${ISSUE_TITLE:-}
+      ISSUE_BODY: ${ISSUE_BODY:-}
+
+  # Observability: funnel report (issues -> sessions -> PRs)
+  report:
+    build: .
+    command: ["scripts/report.py"]
+    environment: *devin-env
+    volumes:
+      - ./:/out
+    working_dir: /out
