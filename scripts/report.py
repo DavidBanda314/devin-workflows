@@ -90,6 +90,8 @@ def build_report():
     prs = {}
     for s in sessions:
         n = issue_number_from_tags(s.get("tags", []))
+        if n is None:
+            continue
         for pr in s.get("pull_requests") or []:
             if pr.get("pr_url"):
                 prs[n] = pr
