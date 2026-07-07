@@ -1,0 +1,40 @@
+# Copy this file to .github/workflows/devin-dispatch.yml in the TARGET fork
+# (issue events are only delivered to the repo where the issues live).
+name: devin-dispatch
+
+on:
+  issues:
+    types: [opened, labeled]
+
+jobs:
+  dispatch:
+    if: contains(github.event.issue.labels.*.name, 'devin-fix')
+    # Avoid double-dispatch when an issue is opened already labeled and then
+    # labeled again: only run once per issue via concurrency group.
+    concurrency:
+      group: devin-dispatch-${{ github.event.issue.number }}
+      cancel-in-progress: false
+    runs-on: ubuntu-latest
+    permissions:
+      issues: write
+    steps:
+      - name: Checkout automation scripts
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v6.0.1
+        with:
+          repository: DavidBanda314/devin-workflows
+          persist-credentials: false
+      - uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1 # v6.3.0
+        with:
+          python-version: "3.11"
+      - name: Dispatch Devin fix session
+        env:
+          DEVIN_SERVICE_API_KEY: ${{ secrets.DEVIN_SERVICE_API_KEY }}
+          DEVIN_ORG_ID: ${{ secrets.DEVIN_ORG_ID }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          TARGET_REPO: ${{ github.repository }}
+          ISSUE_NUMBER: ${{ github.event.issue.number }}
+          ISSUE_TITLE: ${{ github.event.issue.title }}
+          ISSUE_BODY: ${{ github.event.issue.body }}
+          ISSUE_URL: ${{ github.event.issue.html_url }}
+          PYTHONPATH: scripts
+        run: python scripts/dispatch.py
