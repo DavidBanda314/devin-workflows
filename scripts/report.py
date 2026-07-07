@@ -81,7 +81,7 @@ def build_report():
         if "devin-audit" in s.get("tags", []):
             audit_sessions.append(s)
         n = issue_number_from_tags(s.get("tags", []))
-        if n is not None:
+        if n in issue_numbers:
             fix_sessions.setdefault(n, s)
 
     lines = []
