@@ -62,8 +62,16 @@ def fmt_ts(ts):
 
 
 def build_report():
-    sessions = get_automation_sessions()
     issues = [i for i in get_issues() if "pull_request" not in i]
+    issue_numbers = {i["number"] for i in issues}
+
+    # Scope to sessions tied to an existing issue (deleted issues drop their
+    # sessions from the report) plus audit sessions.
+    sessions = []
+    for s in get_automation_sessions():
+        n = issue_number_from_tags(s.get("tags", []))
+        if "devin-audit" in s.get("tags", []) or n in issue_numbers:
+            sessions.append(s)
 
     fix_sessions = {}
     audit_sessions = []
