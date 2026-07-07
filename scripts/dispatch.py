@@ -48,6 +48,26 @@ Keep the diff minimal and scoped to this one finding only.
 """
 
 
+def already_dispatched():
+    """True if the issue already has a remediation-session comment."""
+    token = os.environ.get("GITHUB_TOKEN")
+    if not token:
+        return False
+    result = subprocess.run(
+        ["gh", "issue", "view", ISSUE_NUMBER, "-R", TARGET_REPO,
+         "--json", "comments", "--jq",
+         '[.comments[].body | select(contains("Devin remediation session"))] | length'],
+        capture_output=True,
+        text=True,
+        check=False,
+        env={**os.environ, "GH_TOKEN": token},
+    )
+    try:
+        return int(result.stdout.strip()) > 0
+    except ValueError:
+        return False
+
+
 def comment_on_issue(text):
     token = os.environ.get("GITHUB_TOKEN")
     if not token:
@@ -61,6 +81,9 @@ def comment_on_issue(text):
 
 
 def main():
+    if already_dispatched():
+        print(f"Issue #{ISSUE_NUMBER} already has a remediation session; skipping.")
+        return
     session_id, url = create_session(
         prompt=build_prompt(),
         title=f"fix: remediate issue #{ISSUE_NUMBER} — {ISSUE_TITLE[:60]}",
