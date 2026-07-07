@@ -12,11 +12,17 @@ AUDIT_PROMPT = f"""You are the detection stage of an automated vulnerability
 remediation pipeline for {TARGET_REPO}.
 
 Task:
-1. Clone {TARGET_REPO} and audit it for security problems. Use scanners as
-   tools where helpful (pip-audit / npm audit for dependency CVEs, ruff with
-   security rules / grep for hardcoded secrets and unsafe patterns like
-   f-string SQL or eval on user input), and apply your own judgment to filter
-   false positives. Focus on findings that are real and fixable.
+1. Clone {TARGET_REPO} and audit it for security problems across ALL THREE of
+   these categories (cover each category before going deeper on any one):
+   a. Dependency CVEs: pinned versions in requirements/ with known CVEs
+      (pip-audit / npm audit).
+   b. Hardcoded secrets: API keys, tokens, or passwords committed in source
+      (grep / secret-scanning patterns).
+   c. Unsafe code patterns: SQL built via string interpolation, eval/exec on
+      user input, etc. (ruff security rules / manual review).
+   Apply your own judgment to filter false positives. Focus on findings that
+   are real, high-signal, and fixable — prefer a few solid findings per
+   category over exhaustive lists.
 2. For EACH confirmed finding, create one GitHub Issue on {TARGET_REPO}
    (use `gh issue create`) with:
    - Title: "[security] <short description>"
