@@ -8,9 +8,10 @@ on:
 
 jobs:
   dispatch:
-    if: contains(github.event.issue.labels.*.name, 'devin-fix')
-    # Avoid double-dispatch when an issue is opened already labeled and then
-    # labeled again: only run once per issue via concurrency group.
+    # Only react to the 'labeled' event for the remediation label: issues
+    # created with the label emit both 'opened' and 'labeled', so gating on a
+    # single event type prevents duplicate dispatches.
+    if: github.event.action == 'labeled' && github.event.label.name == 'devin-fix'
     concurrency:
       group: devin-dispatch-${{ github.event.issue.number }}
       cancel-in-progress: false
